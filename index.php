@@ -6,33 +6,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Учет платежей</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
 <div class="container mt-5">
     <h1>Список организаций</h1>
-    <a href="add_organization.php" class="btn btn-primary mb-3">Добавить организацию</a>
+    <a href="edit_organization.php?id=0" class="btn btn-primary mb-3">Добавить организацию</a>
     <table class="table table-bordered table-responsive">
         <thead>
         <tr>
+            <th>Город</th>
             <th>Название</th>
-            <th>Адрес</th>
-            <th>Контакт</th>
+            <!--th>Адрес</th>
+            <th>Контакт</th-->
             <th>Действия</th>
         </tr>
         </thead>
         <tbody>
         <?php
         require 'db.php';
-        $stmt = $pdo->query("SELECT * FROM organizations");
+        $stmt = $pdo->query("SELECT o.id_city,o.id as id, c.name as city_name, o.name as name FROM organizations as o, city as c
+                                       WHERE o.id_city=c.id_city
+                                       order by c.name,o.name;");
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             echo "<tr>
+                            <td>{$row['city_name']}</td>
                             <td>{$row['name']}</td>
-                            <td>{$row['address']}</td>
-                            <td>{$row['contact']}</td>
+                            <!--td>{$row['address']}</td>
+                            <td>{$row['contact']}</td-->
+                           
+                            
                             <td>
                                 <a href='edit_organization.php?id={$row['id']}' class='btn btn-warning'>Редактировать</a>
-                                <a href='payments.php?id={$row['id']}' class='btn btn-info'>Платежи</a>
+                                <a href='payments.php?id={$row['id']}&org_id={$row['id']}' class='btn btn-info'>Платежи</a>
                                 <a href='delete_organization.php?id={$row['id']}' class='btn btn-danger'>Удалить</a>
+                                
                             </td>
                           </tr>";
         }
