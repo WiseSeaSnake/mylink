@@ -14,6 +14,63 @@ global $pdo;
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+
+    <style>
+        /* Стили для модального окна */
+        .modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .download-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+
     <script>
         async function copyToClipboard(i) {
 
@@ -23,6 +80,24 @@ global $pdo;
                 alert("Скопировано в буфер обмена: " + textToCopy);
             } catch (err) {
                 console.error("Ошибка при копировании: ", err);
+            }
+        }
+
+        function openModal(imageUrl) {
+            document.getElementById("modalImage").src = imageUrl; // Устанавливаем источник изображения
+            document.getElementById("downloadLink").href = imageUrl; // Устанавливаем ссылку для скачивания
+            document.getElementById("myModal").style.display = "block"; // Показываем модальное окно
+        }
+
+        function closeModal() {
+            document.getElementById("myModal").style.display = "none"; // Скрываем модальное окно
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            var modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                closeModal();
             }
         }
     </script>
@@ -59,6 +134,7 @@ global $pdo;
             <tr>
                 <th>Сумма</th>
                 <th>Дата</th>
+                <th>Счет</th>
                 <th>Чек</th>
                 <th>Действия</th>
             </tr>
@@ -73,8 +149,13 @@ global $pdo;
                 echo "<tr>
                                 <td>{$row['amount']}</td>
                                 <td>{$row['date']}</td>
-                                <td><img src='{$row['receipt']}' alt='Receipt' style='width: 100px;'></td>
+                             
+                                <td><a href='{$row['payment_invoice']}'><avatars src='{$row['payment_invoice']}' width='100px' alt=''></a></td>
+                                <td><a href='{$row['receipt']}'><avatars src='{$row['receipt']}' width='100px' alt=''></a></td>
+                                
+                                
                                 <td>
+                                    
                                     <a href='edit_payment.php?pay_id={$row['id']}&org_id={$row['organization_id']}' class='btn btn-warning'>Редактировать</a>
                                     <a href='delete_payment.php?id={$row['id']}' class='btn btn-danger'>Удалить</a>
                                 </td>
@@ -85,6 +166,15 @@ global $pdo;
         </table>
         <a href="index.php" class="btn btn-secondary">Назад к списку организаций</a>
     </div>
-</div>
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modalImage" src="" alt="Modal Image">
+            <br>
+            <a id="downloadLink" class="download-btn" download>Сохранить изображение</a>
+        </div>
+    </div>
+
+
 </body>
 </html>

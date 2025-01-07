@@ -91,6 +91,7 @@ require 'db.php';?>
             <label for="contact">Контакт:</label>
             <input type="text" id="contact" name="contact" class="form-control" value="<?php echo $organization['contact']; ?>">
         </div>
+
         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
         <a href="index.php" class="btn btn-secondary">Назад к списку организаций</a>
     </form>

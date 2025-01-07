@@ -11,63 +11,64 @@ $amount = $_POST['amount'];
 $date = $_POST['date'];
 $org_id = $_POST['org_id'];
 
-$target_dir = "uploads/";
-if (!is_dir($target_dir)) {mkdir($target_dir);}
+$target_dir = "receipt/";
+if (!is_dir($target_dir)) {mkdir($target_dir, 0777, true);}
 $target_dir = $target_dir . $year. "/";
-if (!is_dir($target_dir)) {mkdir($target_dir);}
-$target_dir = $target_dir . $month . "/";
-if (!is_dir($target_dir)) {mkdir($target_dir);}
+if (!is_dir($target_dir)) {mkdir($target_dir, 0777, true);}
+$target_dir = $target_dir . trim($month) . "/";
+if (!is_dir($target_dir)) {mkdir($target_dir, 0777, true);}
 
+$targetExt = pathinfo($_FILES['receipt']['name'], PATHINFO_EXTENSION);
+$targetFile = sprintf('s-%s-%04d-%02d.%s', getOrgName($org_id), $year, $month, $targetExt);
 
-
+$invoiceExt = pathinfo($_FILES['payment_invoice']['name'], PATHINFO_EXTENSION);
+$invoiceFile = sprintf('k-%s-%04d-%02d.%s', getOrgName($org_id), $year, $month, $targetExt);
+/*
+var_dump($target_dir);
+var_dump($targetFile);
+var_dump($invoiceFile);*/
 
 if ((int)$id>0 ){
-    // Проверяем, загружен ли новый файл
+    $param= ['year'=>$year,'month'=>$month, 'amount' => $amount, 'date' => $date, 'id' => $id];
+    $sql="UPDATE payments SET year= :year, month= :month,amount = :amount, date = :date";
     if ($_FILES["receipt"]["name"]) {
-        // Загрузка нового файла
-        $target_file = $target_dir . basename($_FILES["receipt"]["name"]);
-        move_uploaded_file($_FILES["receipt"]["tmp_name"], $target_file);
-        $sql = "UPDATE payments SET year= :year, month= :month,amount = :amount, date = :date, receipt = :receipt WHERE id = :id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['year'=>$year,'month'=>$month, 'amount' => $amount, 'date' => $date, 'receipt' => $target_file, 'id' => $id]);
-    } else {
-        // Если файл не был загружен, просто обновляем другие поля
-        $sql = "UPDATE payments SET year= :year, month= :month, amount = :amount, date = :date WHERE id = :id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['year'=>$year,'month'=>$month,'amount' => $amount, 'date' => $date, 'id' => $id]);
+        $sql.=", receipt = :receipt";
+        $param['receipt'] = $target_dir . $targetFile;
+        //var_dump($sql, $param);
+        move_uploaded_file($_FILES["receipt"]["tmp_name"], $target_dir . $targetFile);
     }
-} else {
-// Загрузка файла
-    $target_file = $target_dir . basename($_FILES["receipt"]["name"]);
-    move_uploaded_file($_FILES["receipt"]["tmp_name"], $target_file);
-
-    $sql = "INSERT INTO payments (organization_id, year, month, amount, date, receipt) 
-                        VALUES (:organization_id, :year, :month, :amount, :date, :receipt)";
+    if ($_FILES["payment_invoice"]["name"]) {
+        $sql.=", payment_invoice = :payment_invoice";
+        $param['payment_invoice'] = $target_dir . $invoiceFile;
+        //var_dump($sql, $param);
+        move_uploaded_file($_FILES["payment_invoice"]["tmp_name"], $target_dir . $invoiceFile);
+    }
+    $sql  .= " WHERE id = :id";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute(['organization_id' => $org_id, 'year'=>$year, 'month'=>$month, 'amount' => $amount, 'date' => $date, 'receipt' => $target_file]);
+    $stmt->execute($param);
+
+} else {
+
+    $sqlInsert="INSERT INTO payments (organization_id, year, month, amount, date";
+    $sqlValues=") VALUES (:organization_id, :year, :month, :amount, :date";
+    $param=['organization_id' => $org_id, 'year'=>$year, 'month'=>$month, 'amount' => $amount, 'date' => $date];
+    if ($_FILES["receipt"]["name"]) {
+        move_uploaded_file($_FILES["receipt"]["tmp_name"], $target_dir.$targetFile);
+        $sqlInsert .= ", receipt";
+        $sqlValues.=", :receipt";
+        $param['receipt'] = $target_dir . $targetFile;
+    }
+    if ($_FILES["payment_invoice"]["name"]) {
+        $sqlInsert.=", payment_invoice";
+        $sqlValues.=", :payment_invoice";
+        $param['payment_invoice'] = $target_dir . $invoiceFile;
+        //var_dump($sql, $param);
+        move_uploaded_file($_FILES["payment_invoice"]["tmp_name"], $target_dir . $invoiceFile);
+    }
+    $sql=$sqlInsert . $sqlValues . ");";
+    var_dump($sql);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($param);
 }
-
 header("Location: payments.php?org_id=" . $org_id);
-?>
-
-<?php
-/*
-global $pdo;
-require 'db.php';
-
-$organization_id = $_POST['organization_id'];
-$amount = $_POST['amount'];
-$date = $_POST['date'];
-
-// Загрузка файла
-$target_dir = "uploads/";
-$target_file = $target_dir . basename($_FILES["receipt"]["name"]);
-move_uploaded_file($_FILES["receipt"]["tmp_name"], $target_file);
-
-$sql = "INSERT INTO payments (organization_id, amount, date, receipt) VALUES (:organization_id, :amount, :date, :receipt)";
-$stmt = $pdo->prepare($sql);
-$stmt->execute(['organization_id' => $organization_id, 'amount' => $amount, 'date' => $date, 'receipt' => $target_file]);
-
-header("Location: payments.php?id=" . $organization_id);
-*/
 ?>

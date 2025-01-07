@@ -1,4 +1,7 @@
-<?php global  $pdo; ?>
+<?php
+require 'db.php';
+session_start();
+global  $pdo; ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,11 +10,21 @@
     <title>Учет платежей</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+
+
+    </style>
 </head>
 <body>
+<?php
+//include "header/header.php";
+include "nav/navbar.php";
+?>
 <div class="container mt-5">
-    <h1>Список организаций</h1>
-    <a href="edit_organization.php?id=0" class="btn btn-primary mb-3">Добавить организацию</a>
+    <h1>Платежи</h1>
+    <a href="edit_organization.php?id=0" class="btn btn-primary mb-3" <?php
+          echo ($_SESSION['role']=="admin" || $_SESSION['role']=="admin") ? "" : " hidden ";  ?>>  Добавить расчетный счет</a>
     <table class="table table-bordered table-responsive">
         <thead>
         <tr>
@@ -24,18 +37,17 @@
         </thead>
         <tbody>
         <?php
-        require 'db.php';
-        $stmt = $pdo->query("SELECT o.id_city,o.id as id, c.name as city_name, o.name as name FROM organizations as o, city as c
-                                       WHERE o.id_city=c.id_city
+        $user_id=$_SESSION['user_id'];
+        if ($user_id>0){
+            $stmt = $pdo->query("SELECT o.id_city,o.id as id, c.name as city_name, o.name as name FROM organizations as o, city as c
+                                       WHERE o.id_city=c.id_city and o.user_id=$user_id
                                        order by c.name,o.name;");
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            echo "<tr>
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                echo "<tr>
                             <td>{$row['city_name']}</td>
                             <td>{$row['name']}</td>
                             <!--td>{$row['address']}</td>
                             <td>{$row['contact']}</td-->
-                           
-                            
                             <td>
                                 <a href='edit_organization.php?id={$row['id']}' class='btn btn-warning'>Редактировать</a>
                                 <a href='payments.php?id={$row['id']}&org_id={$row['id']}' class='btn btn-info'>Платежи</a>
@@ -43,7 +55,10 @@
                                 
                             </td>
                           </tr>";
+            }
+
         }
+
         ?>
         </tbody>
     </table>
